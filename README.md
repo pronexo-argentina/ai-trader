@@ -36,6 +36,12 @@ It combines a **JavaFX desktop application** with a **Python/FastAPI analytics e
 - SPDR S&P 500 ETF (`SPY`)
 - Invesco QQQ (`QQQ`)
 - Historical market data through Yahoo Finance / `yfinance`
+- Stock/ETF search by ticker or company name with 300 ms autocomplete
+- Search results with ticker, company name, exchange and company logo when available
+- Selected stock displays its logo directly inside the asset control
+- Stable top-toolbar layout when switching between crypto and stocks
+- Clicking/focusing the asset field selects its text for fast replacement
+- Initials are shown automatically when a logo is unavailable
 - Intraday historical downloads split into date chunks for improved reliability
 - Correct Unix-millisecond timestamp normalization across pandas/yfinance versions
 
@@ -235,9 +241,7 @@ The user manual is written to be understandable even without previous trading ex
 
 ### Market Experience
 
-- Universal asset search
-- Autocomplete by ticker or company name
-- Company and crypto logos
+- Universal crypto asset search
 - Recently used assets and favorites
 - More exchanges and market-data sources
 - Argentine local-market data
@@ -298,3 +302,9 @@ Financial markets involve risk. Historical performance does not guarantee future
 ## License
 
 AI Trader is licensed under the **GNU General Public License v3.0 (GPL-3.0)**.
+
+
+## Logo attribution
+
+Stock and ETF logos in the asset search are provided by [Parqet](https://parqet.com/api).
+When a logo is not available, AI Trader displays the asset initials instead.

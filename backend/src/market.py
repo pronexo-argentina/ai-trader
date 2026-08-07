@@ -1,5 +1,6 @@
 import time
 from typing import Literal
+from urllib.parse import quote
 
 import ccxt
 import pandas as pd
@@ -30,6 +31,81 @@ YF_PERIODS = {
     "6m": "6mo",
     "1y": "1y",
 }
+
+
+
+def search_stock_symbols(query: str, limit: int = 8) -> list[dict]:
+    """Busca acciones y ETF por ticker o nombre usando Yahoo Finance."""
+    query = (query or "").strip()
+
+    if len(query) < 2:
+        return []
+
+    limit = max(1, min(int(limit), 12))
+
+    search = yf.Search(
+        query,
+        max_results=limit,
+        news_count=0,
+        lists_count=0,
+        include_cb=False,
+        include_nav_links=False,
+        include_research=False,
+        enable_fuzzy_query=True,
+        recommended=0,
+        timeout=10,
+        raise_errors=True,
+    )
+
+    results = []
+
+    for item in search.quotes:
+        quote_type = str(item.get("quoteType") or "").upper()
+
+        if quote_type not in {"EQUITY", "ETF"}:
+            continue
+
+        symbol = str(item.get("symbol") or "").strip()
+
+        if not symbol:
+            continue
+
+        name = (
+            item.get("shortname")
+            or item.get("longname")
+            or item.get("displayName")
+            or symbol
+        )
+
+        exchange = (
+            item.get("exchDisp")
+            or item.get("exchange")
+            or item.get("exchangeDisplay")
+            or ""
+        )
+
+        # Parqet permite resolver logos directamente por ticker.
+        # Si un logo no existe, el escritorio muestra las iniciales como fallback.
+        logo_url = (
+            "https://assets.parqet.com/logos/symbol/"
+            + quote(symbol, safe="")
+            + "?format=png&size=80"
+        )
+
+        results.append(
+            {
+                "symbol": symbol,
+                "name": str(name),
+                "exchange": str(exchange),
+                "type": quote_type,
+                "logo_url": logo_url,
+            }
+        )
+
+        if len(results) >= limit:
+            break
+
+    return results
 
 
 def fetch_market_data(
@@ -176,16 +252,6 @@ def fetch_stock_ohlcv(
                 actions=False,
             )
 
-            print(
-                "YAHOO CHUNK",
-                symbol,
-                cursor.isoformat(),
-                "->",
-                chunk_end.isoformat(),
-                "filas:",
-                0 if chunk is None else len(chunk),
-            )
-
             if chunk is not None and not chunk.empty:
                 chunks.append(chunk)
 
@@ -197,9 +263,7 @@ def fetch_stock_ohlcv(
             )
 
         df = pd.concat(chunks)
-        print("YAHOO TOTAL CONCATENADO", symbol, "filas:", len(df))
         df = df[~df.index.duplicated(keep="first")].sort_index()
-        print("YAHOO TOTAL SIN DUPLICADOS", symbol, "filas:", len(df))
 
     if df is None or df.empty:
         raise RuntimeError(f"No se obtuvieron datos bursátiles para {symbol}")
@@ -241,9 +305,7 @@ def fetch_stock_ohlcv(
     df = df.rename(columns=renamed)
 
     df = df[["timestamp", "open", "high", "low", "close", "volume"]].copy()
-    print("ANTES NORMALIZE", symbol, "filas:", len(df), "timestamps únicos:", df["timestamp"].nunique())
     df = _normalize_dataframe(df)
-    print("DESPUES NORMALIZE", symbol, "filas:", len(df), "timestamps únicos:", df["timestamp"].nunique())
 
     if timeframe == "4h":
         dt = pd.to_datetime(df["timestamp"], unit="ms", utc=True)

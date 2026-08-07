@@ -1,11 +1,11 @@
 from typing import Literal
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from .backtest import run_backtest
 from .indicators import add_indicators, technical_snapshot
-from .market import fetch_market_data
+from .market import fetch_market_data, search_stock_symbols
 
 
 class AnalysisRequest(BaseModel):
@@ -36,6 +36,20 @@ app = FastAPI(
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+
+@app.get("/symbols/search")
+def symbols_search(
+    q: str = Query(min_length=2, max_length=80),
+    limit: int = Query(default=8, ge=1, le=12),
+):
+    try:
+        return {
+            "query": q,
+            "results": search_stock_symbols(q, limit),
+        }
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 @app.post("/analysis")

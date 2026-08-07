@@ -1,22 +1,29 @@
 package com.aitrader;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import javafx.animation.PauseTransition;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.chart.CategoryAxis;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 
 public class AiTraderApp extends Application {
 
@@ -25,6 +32,15 @@ public class AiTraderApp extends Application {
     private final ComboBox<String> marketBox = new ComboBox<>();
     private final ComboBox<String> sourceBox = new ComboBox<>();
     private final ComboBox<String> symbolBox = new ComboBox<>();
+    private final TextField stockSearchField = new TextField();
+    private final ContextMenu stockSearchMenu = new ContextMenu();
+    private final PauseTransition stockSearchDelay =
+            new PauseTransition(Duration.millis(300));
+    private final StackPane assetSelectorPane = new StackPane();
+    private final StackPane selectedAssetLogo = new StackPane();
+    private final Label selectedAssetInitials = new Label("AA");
+    private final ImageView selectedAssetImage = new ImageView();
+    private String selectedStockSymbol = "AAPL";
     private final ComboBox<String> timeframeBox = new ComboBox<>();
     private final ComboBox<String> periodBox = new ComboBox<>();
 
@@ -103,7 +119,10 @@ public class AiTraderApp extends Application {
     private void configureSelectors() {
         marketBox.getItems().addAll("Criptomonedas", "Acciones / ETF");
         marketBox.setValue("Criptomonedas");
-        marketBox.setOnAction(e -> refreshMarketSelectors());
+        marketBox.setOnAction(e -> {
+            refreshMarketSelectors();
+            Platform.runLater(marketBox::hide);
+        });
 
         timeframeBox.getItems().addAll("1h", "4h", "1d");
         timeframeBox.setValue("1h");
@@ -111,11 +130,114 @@ public class AiTraderApp extends Application {
         periodBox.getItems().addAll("1m", "3m", "6m", "1y");
         periodBox.setValue("3m");
 
+        marketBox.setMinWidth(150);
         marketBox.setPrefWidth(150);
+        marketBox.setMaxWidth(150);
+
+        sourceBox.setMinWidth(110);
         sourceBox.setPrefWidth(110);
-        symbolBox.setPrefWidth(125);
+        sourceBox.setMaxWidth(110);
+
+        // El bloque Activo mantiene el mismo ancho en ambos mercados
+        // para que la barra superior no se mueva al alternar.
+        symbolBox.setMinWidth(300);
+        symbolBox.setPrefWidth(300);
+        symbolBox.setMaxWidth(300);
+
+        timeframeBox.setMinWidth(85);
         timeframeBox.setPrefWidth(85);
+        timeframeBox.setMaxWidth(85);
+
+        periodBox.setMinWidth(95);
         periodBox.setPrefWidth(95);
+        periodBox.setMaxWidth(95);
+
+        stockSearchField.setPromptText("Buscar acción o ticker...");
+        stockSearchField.setText("AAPL — Apple Inc.");
+        stockSearchField.setMinWidth(255);
+        stockSearchField.setPrefWidth(255);
+        stockSearchField.setMaxWidth(255);
+        stockSearchField.getStyleClass().add("asset-search-field");
+
+        stockSearchMenu.getStyleClass().add("asset-search-menu");
+
+        stockSearchDelay.setOnFinished(e -> {
+            if ("stocks".equals(marketType())) {
+                searchStocks(stockSearchField.getText());
+            }
+        });
+
+        stockSearchField.textProperty().addListener((obs, oldValue, newValue) -> {
+            if (!"stocks".equals(marketType())) {
+                return;
+            }
+
+            selectedStockSymbol = null;
+            String value = newValue == null ? "" : newValue.trim();
+
+            if (value.length() < 2) {
+                stockSearchDelay.stop();
+                stockSearchMenu.hide();
+                return;
+            }
+
+            stockSearchDelay.playFromStart();
+        });
+
+        stockSearchField.setOnAction(e -> {
+            stockSearchMenu.hide();
+            analyze();
+        });
+
+        selectedAssetInitials.getStyleClass().add("selected-asset-initials");
+        selectedAssetImage.setFitWidth(24);
+        selectedAssetImage.setFitHeight(24);
+        selectedAssetImage.setPreserveRatio(true);
+        selectedAssetImage.getStyleClass().add("selected-asset-image");
+
+        selectedAssetLogo.getChildren().addAll(
+                selectedAssetInitials,
+                selectedAssetImage
+        );
+        selectedAssetLogo.getStyleClass().add("selected-asset-logo");
+        selectedAssetLogo.setMinSize(30, 30);
+        selectedAssetLogo.setPrefSize(30, 30);
+        selectedAssetLogo.setMaxSize(30, 30);
+
+        HBox stockSearchControl = new HBox(
+                8,
+                selectedAssetLogo,
+                stockSearchField
+        );
+        stockSearchControl.setAlignment(Pos.CENTER_LEFT);
+        stockSearchControl.getStyleClass().add("asset-search-control");
+
+        assetSelectorPane.getChildren().addAll(symbolBox, stockSearchControl);
+
+        assetSelectorPane.setMinWidth(300);
+        assetSelectorPane.setPrefWidth(300);
+        assetSelectorPane.setMaxWidth(300);
+
+        symbolBox.managedProperty().bind(symbolBox.visibleProperty());
+        stockSearchControl.managedProperty().bind(stockSearchControl.visibleProperty());
+        stockSearchControl.visibleProperty().bind(stockSearchField.visibleProperty());
+
+        stockSearchField.setOnMouseClicked(e -> {
+            if ("stocks".equals(marketType())) {
+                stockSearchField.selectAll();
+            }
+        });
+
+        stockSearchField.focusedProperty().addListener((obs, wasFocused, isFocused) -> {
+            if (isFocused && "stocks".equals(marketType())) {
+                stockSearchField.selectAll();
+            }
+        });
+
+        updateSelectedAssetVisual(
+                "AAPL",
+                "https://assets.parqet.com/logos/symbol/AAPL?format=png&size=80"
+        );
 
         refreshMarketSelectors();
     }
@@ -126,7 +248,12 @@ public class AiTraderApp extends Application {
         sourceBox.getItems().clear();
         symbolBox.getItems().clear();
 
+        symbolBox.setVisible(crypto);
+        stockSearchField.setVisible(!crypto);
+
         if (crypto) {
+            stockSearchMenu.hide();
+
             sourceBox.getItems().addAll("binance", "kraken");
             sourceBox.setValue("binance");
 
@@ -136,14 +263,15 @@ public class AiTraderApp extends Application {
             sourceBox.getItems().add("yahoo");
             sourceBox.setValue("yahoo");
 
-            symbolBox.getItems().addAll(
-                    "AAPL",
-                    "ASML",
-                    "YPF",
-                    "SPY",
-                    "QQQ"
-            );
-            symbolBox.setValue("AAPL");
+            if (stockSearchField.getText() == null
+                    || stockSearchField.getText().isBlank()) {
+                stockSearchField.setText("AAPL — Apple Inc.");
+                selectedStockSymbol = "AAPL";
+                updateSelectedAssetVisual(
+                        "AAPL",
+                        "https://assets.parqet.com/logos/symbol/AAPL?format=png&size=80"
+                );
+            }
         }
     }
 
@@ -157,18 +285,25 @@ public class AiTraderApp extends Application {
         analyzeButton.getStyleClass().add("primary-button");
         analyzeButton.setOnAction(e -> analyze());
 
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
-
-        HBox top = new HBox(
+        HBox selectors = new HBox(
                 9,
-                brand,
-                spacer,
                 labeledSelector("Mercado", marketBox),
                 labeledSelector("Fuente", sourceBox),
-                labeledSelector("Activo", symbolBox),
+                labeledSelector("Activo", createAssetControl()),
                 labeledSelector("Vela", timeframeBox),
-                labeledSelector("Período", periodBox),
+                labeledSelector("Período", periodBox)
+        );
+        selectors.setAlignment(Pos.CENTER_LEFT);
+        selectors.getStyleClass().add("top-selectors");
+
+        Region actionSpacer = new Region();
+        HBox.setHgrow(actionSpacer, Priority.ALWAYS);
+
+        HBox top = new HBox(
+                18,
+                brand,
+                selectors,
+                actionSpacer,
                 mode,
                 analyzeButton
         );
@@ -180,10 +315,252 @@ public class AiTraderApp extends Application {
         return top;
     }
 
-    private VBox labeledSelector(String title, ComboBox<String> combo) {
-        VBox box = new VBox(4, muted(title), combo);
+    private VBox labeledSelector(String title, Node control) {
+        VBox box = new VBox(4, muted(title), control);
         box.setAlignment(Pos.CENTER_LEFT);
         return box;
+    }
+
+    private VBox createAssetControl() {
+        VBox box = new VBox(assetSelectorPane);
+        box.setAlignment(Pos.CENTER_LEFT);
+        return box;
+    }
+
+    private void searchStocks(String rawQuery) {
+        String query = rawQuery == null ? "" : rawQuery.trim();
+
+        if (query.length() < 2) {
+            stockSearchMenu.hide();
+            return;
+        }
+
+        Task<JsonNode> task = new Task<>() {
+            @Override
+            protected JsonNode call() throws Exception {
+                return api.searchSymbols(query);
+            }
+        };
+
+        task.setOnSucceeded(e -> {
+            if (!"stocks".equals(marketType())) {
+                return;
+            }
+
+            String current = stockSearchField.getText() == null
+                    ? ""
+                    : stockSearchField.getText().trim();
+
+            if (!current.equals(query)) {
+                return;
+            }
+
+            JsonNode results = task.getValue().path("results");
+            stockSearchMenu.getItems().clear();
+
+            for (JsonNode row : results) {
+                AssetResult result = new AssetResult(
+                        row.path("symbol").asText(),
+                        row.path("name").asText(),
+                        row.path("exchange").asText(),
+                        row.path("type").asText(),
+                        row.path("logo_url").asText()
+                );
+
+                CustomMenuItem item = new CustomMenuItem(
+                        createAssetResultRow(result),
+                        true
+                );
+
+                item.setOnAction(event -> selectStock(result));
+                stockSearchMenu.getItems().add(item);
+            }
+
+            if (stockSearchMenu.getItems().isEmpty()) {
+                Label empty = new Label("Sin resultados");
+                empty.getStyleClass().add("asset-empty");
+                stockSearchMenu.getItems().add(new CustomMenuItem(empty, false));
+            }
+
+            if (!stockSearchMenu.isShowing()) {
+                stockSearchMenu.show(
+                        stockSearchField,
+                        javafx.geometry.Side.BOTTOM,
+                        0,
+                        4
+                );
+            }
+        });
+
+        task.setOnFailed(e -> {
+            stockSearchMenu.getItems().clear();
+
+            Label error = new Label("No se pudo buscar en Yahoo");
+            error.getStyleClass().add("asset-empty");
+            stockSearchMenu.getItems().add(new CustomMenuItem(error, false));
+
+            if (!stockSearchMenu.isShowing()) {
+                stockSearchMenu.show(
+                        stockSearchField,
+                        javafx.geometry.Side.BOTTOM,
+                        0,
+                        4
+                );
+            }
+        });
+
+        Thread thread = new Thread(task, "stock-symbol-search");
+        thread.setDaemon(true);
+        thread.start();
+    }
+
+    private Node createAssetResultRow(AssetResult result) {
+        Label initials = new Label(assetInitials(result));
+        initials.getStyleClass().add("asset-logo-fallback");
+
+        StackPane logoHolder = new StackPane(initials);
+        logoHolder.getStyleClass().add("asset-logo-holder");
+        logoHolder.setMinSize(34, 34);
+        logoHolder.setPrefSize(34, 34);
+        logoHolder.setMaxSize(34, 34);
+
+        if (result.logoUrl() != null && !result.logoUrl().isBlank()) {
+            Image image = new Image(
+                    result.logoUrl(),
+                    28,
+                    28,
+                    true,
+                    true,
+                    true
+            );
+
+            ImageView imageView = new ImageView(image);
+            imageView.setFitWidth(28);
+            imageView.setFitHeight(28);
+            imageView.setPreserveRatio(true);
+            imageView.getStyleClass().add("asset-logo");
+
+            logoHolder.getChildren().add(imageView);
+        }
+
+        Label ticker = new Label(result.symbol());
+        ticker.getStyleClass().add("asset-result-symbol");
+
+        String details = result.name();
+
+        if (result.exchange() != null && !result.exchange().isBlank()) {
+            details += " · " + result.exchange();
+        }
+
+        Label name = new Label(details);
+        name.getStyleClass().add("asset-result-name");
+        name.setMaxWidth(290);
+        name.setTextOverrun(OverrunStyle.ELLIPSIS);
+
+        VBox text = new VBox(2, ticker, name);
+
+        HBox row = new HBox(10, logoHolder, text);
+        row.setAlignment(Pos.CENTER_LEFT);
+        row.getStyleClass().add("asset-result-row");
+        row.setPrefWidth(355);
+
+        return row;
+    }
+
+    private String assetInitials(AssetResult result) {
+        String symbol = result.symbol() == null
+                ? "?"
+                : result.symbol().replaceAll("[^A-Za-z0-9]", "");
+
+        if (symbol.isBlank()) {
+            return "?";
+        }
+
+        return symbol.substring(0, Math.min(2, symbol.length()))
+                .toUpperCase(Locale.ROOT);
+    }
+
+    private void selectStock(AssetResult result) {
+        stockSearchDelay.stop();
+        stockSearchMenu.hide();
+        stockSearchField.setText(
+                result.symbol() + " — " + result.name()
+        );
+        selectedStockSymbol = result.symbol();
+        updateSelectedAssetVisual(result.symbol(), result.logoUrl());
+    }
+
+    private void updateSelectedAssetVisual(
+            String symbol,
+            String logoUrl
+    ) {
+        String cleanSymbol = symbol == null
+                ? "?"
+                : symbol.replaceAll("[^A-Za-z0-9]", "");
+
+        String initials = cleanSymbol.isBlank()
+                ? "?"
+                : cleanSymbol.substring(0, Math.min(2, cleanSymbol.length()))
+                        .toUpperCase(Locale.ROOT);
+
+        selectedAssetInitials.setText(initials);
+        selectedAssetImage.setImage(null);
+
+        if (logoUrl == null || logoUrl.isBlank()) {
+            return;
+        }
+
+        Image image = new Image(
+                logoUrl,
+                24,
+                24,
+                true,
+                true,
+                true
+        );
+
+        image.errorProperty().addListener((obs, hadError, hasError) -> {
+            if (hasError) {
+                selectedAssetImage.setImage(null);
+            }
+        });
+
+        selectedAssetImage.setImage(image);
+    }
+
+    private String selectedSymbol() {
+        if ("crypto".equals(marketType())) {
+            return symbolBox.getValue();
+        }
+
+        if (selectedStockSymbol != null && !selectedStockSymbol.isBlank()) {
+            return selectedStockSymbol;
+        }
+
+        String typed = stockSearchField.getText() == null
+                ? ""
+                : stockSearchField.getText().trim();
+
+        int separator = typed.indexOf("—");
+
+        if (separator > 0) {
+            typed = typed.substring(0, separator).trim();
+        }
+
+        if (typed.isBlank()) {
+            return "AAPL";
+        }
+
+        return typed.toUpperCase(Locale.ROOT);
+    }
+
+    private record AssetResult(
+            String symbol,
+            String name,
+            String exchange,
+            String type,
+            String logoUrl
+    ) {
     }
 
     private FlowPane createMetrics() {
@@ -265,7 +642,7 @@ public class AiTraderApp extends Application {
                 return api.analyze(
                         marketType(),
                         sourceBox.getValue(),
-                        symbolBox.getValue(),
+                        selectedSymbol(),
                         timeframeBox.getValue(),
                         periodBox.getValue()
                 );

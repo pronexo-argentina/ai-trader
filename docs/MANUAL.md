@@ -2,6 +2,29 @@
 
 Este manual parte de cero.
 
+
+## Buscar una acción o ETF
+
+Cuando seleccionás **Acciones / ETF**, el campo **Activo** funciona como buscador con autocompletado.
+
+1. Escribí al menos dos caracteres del ticker o del nombre de la empresa.
+2. AI Trader espera aproximadamente 300 ms antes de consultar, para no hacer una búsqueda por cada tecla.
+3. Los resultados muestran ticker, nombre, mercado y logo cuando está disponible.
+4. Elegí un resultado y luego presioná **Analizar mercado**.
+5. El activo seleccionado muestra su logo junto al nombre. Si hacés clic en el campo, el texto queda seleccionado para reemplazarlo rápidamente por otra búsqueda.
+
+Ejemplos:
+
+- `Microsoft` → `MSFT`
+- `NVIDIA` → `NVDA`
+- `Tesla` → `TSLA`
+- `YPF` → ADR de YPF negociado en Estados Unidos
+
+Si el proveedor de logos no tiene una imagen para un activo, se muestran sus iniciales. El logo es únicamente una ayuda visual: el identificador utilizado para obtener los datos y realizar el análisis sigue siendo el **ticker**.
+
+También se puede escribir directamente un ticker y presionar Enter. En ese caso AI Trader intenta analizar ese símbolo aunque no se haya seleccionado una sugerencia del autocompletado.
+
+
 ## Mercados
 
 AI Trader ahora diferencia dos tipos de mercado.
@@ -78,3 +101,8 @@ Antes de Machine Learning:
 3. validar fuera de muestra;
 4. agregar paper trading;
 5. documentar cada decisión.
+
+
+## Barra superior
+
+La barra superior mantiene posiciones fijas al cambiar entre **Criptomonedas** y **Acciones / ETF**. El selector de mercado se cierra automáticamente al elegir una opción y el bloque de activo conserva el mismo ancho para evitar saltos visuales.

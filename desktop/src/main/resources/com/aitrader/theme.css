@@ -1,7 +1,7 @@
 .root { -fx-font-family: "Arial"; -fx-font-size: 13px; }
 .app-root { -fx-background-color: #0b0f14; }
 .top-bar { -fx-background-color: #111821; -fx-border-color: transparent transparent #222c38 transparent; -fx-border-width: 0 0 1 0; }
-.brand { -fx-text-fill: #f5f7fa; -fx-font-size: 19px; -fx-font-weight: 800; }
+.brand { -fx-text-fill: #f5f7fa; -fx-font-size: 19px; -fx-font-weight: 800; -fx-min-width: 380px; -fx-pref-width: 380px; -fx-max-width: 380px; }
 .combo-box {
     -fx-background-color: #17212b;
     -fx-border-color: #2b3a49;
@@ -75,3 +75,113 @@
 .table-row-cell:odd { -fx-background-color: #0f161f; }
 .table-row-cell:selected { -fx-background-color: #1c3555; }
 .table-cell { -fx-text-fill: #dce4ee; -fx-border-color: transparent; -fx-padding: 8px; }
+
+
+/* Asset autocomplete */
+.asset-search-field {
+    -fx-background-color: #17212b;
+    -fx-text-fill: #e8eef5;
+    -fx-prompt-text-fill: #6f8092;
+    -fx-border-color: #2b3a49;
+    -fx-border-radius: 7px;
+    -fx-background-radius: 7px;
+    -fx-min-height: 34px;
+    -fx-pref-height: 34px;
+    -fx-padding: 0 10px;
+}
+
+.asset-search-field:focused {
+    -fx-border-color: #3d8df5;
+}
+
+.context-menu.asset-search-menu,
+.asset-search-menu {
+    -fx-background-color: #111821;
+    -fx-border-color: #2b3a49;
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+    -fx-padding: 5px;
+}
+
+.asset-search-menu .menu-item {
+    -fx-background-color: transparent;
+    -fx-padding: 3px;
+}
+
+.asset-search-menu .menu-item:focused {
+    -fx-background-color: #1c2a38;
+    -fx-background-radius: 6px;
+}
+
+.asset-result-row {
+    -fx-padding: 5px 7px;
+}
+
+.asset-logo-holder {
+    -fx-background-color: #1c2632;
+    -fx-background-radius: 17px;
+}
+
+.asset-logo-fallback {
+    -fx-text-fill: #9fb0c2;
+    -fx-font-size: 10px;
+    -fx-font-weight: 800;
+}
+
+.asset-result-symbol {
+    -fx-text-fill: #f5f7fa;
+    -fx-font-size: 13px;
+    -fx-font-weight: 800;
+}
+
+.asset-result-name {
+    -fx-text-fill: #8fa0b2;
+    -fx-font-size: 11px;
+}
+
+.asset-empty {
+    -fx-text-fill: #8fa0b2;
+    -fx-padding: 9px 12px;
+}
+
+
+
+/* Selected stock inside the search control */
+.asset-search-control {
+    -fx-background-color: #17212b;
+    -fx-border-color: #2b3a49;
+    -fx-border-radius: 7px;
+    -fx-background-radius: 7px;
+    -fx-padding: 2px 7px;
+}
+
+.asset-search-control:focused-within {
+    -fx-border-color: #3d8df5;
+}
+
+.asset-search-control .asset-search-field {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-padding: 0 4px;
+}
+
+.selected-asset-logo {
+    -fx-background-color: #202b37;
+    -fx-background-radius: 15px;
+}
+
+.selected-asset-initials {
+    -fx-text-fill: #aebccc;
+    -fx-font-size: 9px;
+    -fx-font-weight: 800;
+}
+
+
+/* Stable top toolbar layout */
+.top-selectors {
+    -fx-alignment: center-left;
+}
+
+.top-selectors > .vbox {
+    -fx-alignment: center-left;
+}

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.net.URI;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -22,6 +23,41 @@ public class TradingApiClient {
             .build();
 
     private final ObjectMapper mapper = new ObjectMapper();
+
+
+    public JsonNode searchSymbols(String query) throws Exception {
+        String encoded = URLEncoder.encode(
+                query == null ? "" : query.trim(),
+                StandardCharsets.UTF_8
+        );
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(
+                        "http://127.0.0.1:7000/symbols/search?q="
+                                + encoded
+                                + "&limit=8"
+                ))
+                .timeout(Duration.ofSeconds(15))
+                .header("Accept", "application/json")
+                .GET()
+                .build();
+
+        HttpResponse<String> response = client.send(
+                request,
+                HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8)
+        );
+
+        if (response.statusCode() / 100 != 2) {
+            throw new IllegalStateException(
+                    "Backend respondió "
+                            + response.statusCode()
+                            + ": "
+                            + response.body()
+            );
+        }
+
+        return mapper.readTree(response.body());
+    }
 
     public JsonNode analyze(
             String marketType,
