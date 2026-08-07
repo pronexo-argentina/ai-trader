@@ -1,16 +1,30 @@
-# Backend v0.2
+# AI Trader Backend
+
+## Ejecutar
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-uvicorn src.api:app --reload --port 8000
+uvicorn src.api:app --reload --port 7000
 ```
 
-Luego abrí http://127.0.0.1:8000/docs o probá:
+## Mercados
 
-```bash
-curl http://127.0.0.1:8000/health
-```
+### Criptomonedas
+Datos públicos mediante CCXT:
+- Binance
+- Kraken
 
-La señal actual es análisis técnico por reglas, NO Machine Learning.
+### Acciones / ETF
+Datos históricos mediante Yahoo Finance a través de `yfinance`.
+
+Símbolos iniciales:
+- AAPL
+- ASML
+- YPF
+- SPY
+- QQQ
+
+La fuente bursátil se usa para investigación/backtesting, no como feed oficial
+de ejecución.

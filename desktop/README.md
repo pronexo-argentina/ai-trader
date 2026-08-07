@@ -1,9 +1,20 @@
-# Desktop JavaFX v0.2
+# AI Trader Desktop
 
-Requiere JDK 21+, Maven y el backend en http://127.0.0.1:8000.
+Con el backend en el puerto 7000:
 
 ```bash
 mvn clean javafx:run
 ```
 
-Elegí exchange, activo y timeframe; después pulsá **Analizar mercado**.
+Mercados disponibles:
+
+- Criptomonedas
+- Acciones / ETF
+
+Acciones iniciales:
+
+- Apple (`AAPL`)
+- ASML (`ASML`)
+- YPF (`YPF`)
+- SPY
+- QQQ

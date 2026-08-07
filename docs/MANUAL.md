@@ -1,81 +1,80 @@
-# Manual de AI Trader — versión de trabajo 0.2
+# Manual de AI Trader
 
-Este manual parte de cero: no presupone experiencia previa en trading, criptomonedas ni acciones.
+Este manual parte de cero.
 
-## 1. Qué es AI Trader
-AI Trader es una aplicación de análisis de mercados. En esta etapa descarga datos públicos reales, calcula indicadores, prueba una estrategia sobre datos históricos y presenta resultados. Todavía NO usa Machine Learning para predecir precios y NO ejecuta órdenes reales.
+## Mercados
 
-## 2. Qué es un activo
-Un activo es aquello cuyo precio queremos analizar. Ejemplos: BTC (Bitcoin), ETH (Ether), AAPL (acción de Apple) y SPY (ETF ligado al S&P 500).
+AI Trader ahora diferencia dos tipos de mercado.
 
-## 3. Qué significa BTC/USDT
-BTC/USDT es un par. BTC es el activo y USDT es la moneda en la que se expresa su precio. Si BTC/USDT cotizara a 70.000, un BTC valdría aproximadamente 70.000 USDT en ese mercado.
+### Criptomonedas
 
-## 4. Qué es un exchange
-Un exchange es una plataforma electrónica donde se negocian activos, especialmente criptomonedas. AI Trader usa datos públicos vía CCXT y, en esta versión, puede consultar Binance o Kraken. Consultar datos públicos no implica enviar órdenes.
+Ejemplos:
+- BTC/USDT
+- ETH/USDT
 
-## 5. Qué es una vela
-Una vela resume un período y contiene OHLCV: Open (apertura), High (máximo), Low (mínimo), Close (cierre) y Volume (volumen).
+Funcionan prácticamente 24 horas por día, 7 días por semana.
 
-## 6. Qué significa timeframe
-Es la duración de cada vela. 1h = una hora, 4h = cuatro horas, 1d = un día. Cambiar timeframe cambia la información que ve la estrategia.
+Las fuentes iniciales son Binance y Kraken mediante datos públicos.
 
-## 7. Qué es un backtest
-Un backtest simula qué habría ocurrido si una estrategia hubiera aplicado reglas sobre datos históricos. No demuestra que vaya a ganar en el futuro.
+### Acciones y ETF
 
-## 8. Estrategia inicial
-La estrategia usa EMA 12 y EMA 26. La EMA 12 reacciona más rápido; la EMA 26, más lento. Un cruce alcista puede habilitar una entrada larga en la apertura de la vela siguiente. Esto es análisis técnico, NO IA.
+Ejemplos:
+- `AAPL`: Apple Inc.
+- `ASML`: ASML Holding
+- `YPF`: YPF S.A. ADR que cotiza en Estados Unidos
+- `SPY`: ETF del S&P 500
+- `QQQ`: ETF ligado al Nasdaq-100
 
-## 9. Por qué la entrada se hace en la vela siguiente
-Si una señal depende del cierre de una vela, ese cierre solo se conoce cuando la vela terminó. Por eso la simulación usa la apertura de la vela siguiente; así evitamos introducir deliberadamente información futura (look-ahead bias).
+La fuente inicial es Yahoo Finance mediante la librería yfinance.
 
-## 10. RSI
-RSI (Relative Strength Index) mide la intensidad relativa de movimientos recientes. Referencia clásica: <30 sobreventa, 30–50 momentum débil, 50–70 positivo, >70 sobrecompra. No significa automáticamente comprar o vender.
+## Diferencia importante
 
-## 11. ATR
-ATR (Average True Range) mide cuánto se mueve normalmente el precio. Es una medida de volatilidad, no de dirección.
+Las acciones no operan 24/7. Tienen:
 
-## 12. Stop-loss
-Nivel de salida destinado a limitar una pérdida. Ejemplo: entrada 100, stop 98.
+- horarios de mercado;
+- fines de semana sin negociación;
+- feriados bursátiles;
+- posibles dividendos;
+- splits y otros eventos corporativos.
 
-## 13. Take-profit
-Nivel de salida previsto para realizar una ganancia. Ejemplo: entrada 100, objetivo 104.
+Por eso una vela de 1 hora bursátil no equivale a una hora continua de un
+mercado cripto.
 
-## 14. Comisión
-Una plataforma puede cobrar por comprar y vender. Ignorar comisiones hace que un backtest parezca artificialmente mejor. La v0.2 usa 0,10% como hipótesis de trabajo, no como tarifa real garantizada.
+## YPF
 
-## 15. Slippage
-Diferencia entre el precio teórico y el precio al que razonablemente podría ejecutarse una orden. La v0.2 incluye una hipótesis de slippage para reducir optimismo.
+El símbolo `YPF` usado en esta versión corresponde al ADR de YPF que cotiza
+en Estados Unidos. No es directamente la especie local de BYMA en pesos.
 
-## 16. Capital final y retorno
-Capital final es el dinero ficticio al terminar la simulación. Retorno compara ese capital contra el inicial.
+Más adelante podemos agregar mercado argentino y símbolos locales por una
+fuente específica.
 
-## 17. Drawdown máximo
-Es la peor caída desde un máximo previo del capital. Ejemplo: si pasa de 10.000 a 12.000 y baja a 10.800, la caída desde el máximo es 10%.
+## Fuente Yahoo
 
-## 18. Win rate
-Porcentaje de operaciones cerradas con ganancia. Un win rate alto no garantiza rentabilidad.
+Yahoo Finance se usa como fuente práctica para investigación y backtesting.
 
-## 19. Profit factor
-Relación entre ganancias brutas de operaciones ganadoras y pérdidas brutas de operaciones perdedoras. Más de 1 indica que, en ese backtest, las ganancias brutas superaron a las pérdidas.
+No debe tratarse como un feed oficial de ejecución en tiempo real.
 
-## 20. Buy & Hold
-Benchmark básico: qué habría pasado si simplemente se compraba al inicio y se mantenía hasta el final. Una estrategia compleja debería justificar por qué aporta valor frente a esta referencia.
+## Señales
 
-## 21. Qué no hace todavía
-No hay Machine Learning, LSTM, Transformers, noticias, sentimiento, operaciones reales, paper trading en tiempo real, múltiples estrategias ni walk-forward validation.
+El mismo motor de EMA, RSI, ATR y backtesting puede ejecutarse sobre cripto o
+acciones, pero eso no significa que una misma estrategia sea igualmente buena
+para ambos mercados.
 
-## 22. Flujo de uso actual
-1. Arrancar backend Python.
-2. Arrancar JavaFX.
-3. Elegir exchange.
-4. Elegir BTC/USDT.
-5. Elegir timeframe.
-6. Pulsar Analizar mercado.
-7. Leer análisis técnico.
-8. Comparar estrategia contra Buy & Hold.
-9. Observar drawdown, win rate y operaciones.
-10. No interpretar el resultado como predicción del futuro.
+Precisamente por eso AI Trader compara resultados y riesgo.
 
-## 23. Principios del proyecto
-Primero datos correctos; luego evitar sesgos; medir riesgo; explicar señales; comparar benchmarks; hacer paper trading; recién después agregar ML; y dejar cualquier uso de dinero real para una etapa posterior y deliberada.
+## Sharpe
+
+La anualización se adapta de forma aproximada al mercado:
+
+- cripto: mercado continuo;
+- acciones: aproximadamente 252 ruedas bursátiles por año.
+
+## Próximo objetivo
+
+Antes de Machine Learning:
+
+1. comparar estrategias;
+2. distinguir regímenes de mercado;
+3. validar fuera de muestra;
+4. agregar paper trading;
+5. documentar cada decisión.
