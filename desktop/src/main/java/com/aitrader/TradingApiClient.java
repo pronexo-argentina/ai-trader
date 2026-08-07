@@ -1,0 +1,82 @@
+package com.aitrader;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+
+public class TradingApiClient {
+
+    private static final URI URI_ANALYSIS =
+            URI.create("http://127.0.0.1:7000/analysis");
+
+    private final HttpClient client = HttpClient.newBuilder()
+            .version(HttpClient.Version.HTTP_1_1)
+            .connectTimeout(Duration.ofSeconds(10))
+            .build();
+
+    private final ObjectMapper mapper = new ObjectMapper();
+
+    public JsonNode analyze(
+            String exchange,
+            String symbol,
+            String timeframe
+    ) throws Exception {
+
+        ObjectNode json = mapper.createObjectNode();
+
+        json.put("exchange", exchange);
+        json.put("symbol", symbol);
+        json.put("timeframe", timeframe);
+        json.put("limit", 500);
+        json.put("initial_cash", 10000.0);
+        json.put("fee_pct", 0.001);
+        json.put("slippage_pct", 0.0005);
+        json.put("risk_per_trade", 0.01);
+        json.put("stop_loss_pct", 0.02);
+        json.put("take_profit_pct", 0.04);
+
+        String body = mapper.writeValueAsString(json);
+        byte[] bodyBytes = body.getBytes(StandardCharsets.UTF_8);
+
+        System.out.println("===== JSON ENVIADO =====");
+        System.out.println(body);
+        System.out.println("Bytes enviados: " + bodyBytes.length);
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI_ANALYSIS)
+                .timeout(Duration.ofSeconds(30))
+                .header("Content-Type", "application/json; charset=UTF-8")
+                .header("Accept", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofByteArray(bodyBytes))
+                .build();
+
+        System.out.println("Método HTTP: " + request.method());
+
+        HttpResponse<String> response = client.send(
+                request,
+                HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8)
+        );
+        System.out.println("HTTP version solicitada: HTTP_1_1");
+        System.out.println("===== RESPUESTA BACKEND =====");
+        System.out.println("HTTP " + response.statusCode());
+        System.out.println(response.body());
+
+        if (response.statusCode() / 100 != 2) {
+            throw new IllegalStateException(
+                    "Backend respondió "
+                            + response.statusCode()
+                            + ": "
+                            + response.body()
+            );
+        }
+
+        return mapper.readTree(response.body());
+    }
+}

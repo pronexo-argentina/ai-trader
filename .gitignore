@@ -1,0 +1,27 @@
+# IntelliJ / IDE
+.idea/
+*.iml
+out/
+
+# Java / Maven
+target/
+*.class
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Environment / secrets
+.env
+.env.*
+*.key
+*.pem
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
