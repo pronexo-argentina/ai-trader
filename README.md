@@ -7,64 +7,107 @@
 ![License](https://img.shields.io/badge/License-GPLv3-blue)
 ![Status](https://img.shields.io/badge/status-early%20development-yellow)
 
-AI Trader is an open-source multi-market platform for market analysis,
-strategy backtesting, risk evaluation and future machine-learning experimentation.
+**AI Trader** is an open-source multi-market platform for market analysis, strategy backtesting, risk evaluation and future machine-learning experimentation.
 
-The project combines a JavaFX desktop interface with a Python analytics engine
-connected to public cryptocurrency and stock-market data.
+It combines a **JavaFX desktop application** with a **Python/FastAPI analytics engine** connected to real public market data for cryptocurrencies, stocks and ETFs.
 
-> AI Trader is currently an educational and research project.  
-> It does not provide financial advice or guarantee future results.
+> AI Trader is currently an educational, research and software-development project.  
+> It does not provide financial advice and does not guarantee future results.
+
+## Dashboard
+
+![AI Trader Dashboard](docs/images/dashboard.png)
 
 ## Current Features
 
-### Markets
+### Cryptocurrencies
 
-**Cryptocurrencies**
 - BTC/USDT
 - ETH/USDT
 - Binance
 - Kraken
-- Public market data through CCXT
+- Public OHLCV market data through CCXT
 
-**Stocks / ETFs**
+### Stocks / ETFs
+
 - Apple (`AAPL`)
 - ASML (`ASML`)
 - YPF ADR (`YPF`)
-- SPY
-- QQQ
-- Historical market data through Yahoo Finance / yfinance
+- SPDR S&P 500 ETF (`SPY`)
+- Invesco QQQ (`QQQ`)
+- Historical market data through Yahoo Finance / `yfinance`
+- Intraday historical downloads split into date chunks for improved reliability
+- Correct Unix-millisecond timestamp normalization across pandas/yfinance versions
 
-### Analysis and Backtesting
+### Timeframes and History
 
-- EMA 12 / EMA 26
+Supported candles:
+
+- `1h`
+- `4h`
+- `1d`
+
+Supported historical periods:
+
+- 1 month
+- 3 months
+- 6 months
+- 1 year
+
+### Technical Analysis
+
+- EMA 12
+- EMA 26
 - RSI 14
 - ATR 14
 - Rule-based technical signals
-- Historical periods: 1 month, 3 months, 6 months and 1 year
-- 1h, 4h and 1d timeframes
+- Current trend evaluation
+
+### Backtesting
+
+- Historical strategy simulation
+- Next-candle execution to reduce look-ahead bias
 - Transaction fees
 - Slippage simulation
 - Position sizing
 - Stop-loss
 - Take-profit
+- Conservative same-candle stop/take handling
+
+### Performance Metrics
+
+- Final capital
+- Strategy return
+- Buy & Hold return
 - Maximum drawdown
 - Win rate
 - Profit factor
 - Sharpe ratio
+- Number of trades
 - Average winning trade
 - Average losing trade
-- Buy & Hold benchmark
-- Real dates in price and equity charts
 
-## Important: AI Status
+### Desktop Interface
+
+- JavaFX dashboard
+- Real market price chart
+- Equity curve
+- Backtest operations table
+- Technical-analysis panel
+- Multi-market selector
+- Exchange/data-source selector
+- Timeframe selector
+- Historical-period selector
+
+## AI Status
 
 The current version does **not yet use Machine Learning to generate trading signals**.
 
-Current signals are based on explicit technical-analysis rules.
+Signals are currently produced using explicit and explainable technical-analysis rules.
 
-Machine Learning will be introduced after the market-data pipeline, backtesting,
-risk management and validation infrastructure are mature enough.
+Machine Learning will be introduced only after the data pipeline, backtesting engine, risk controls and validation infrastructure are sufficiently mature.
+
+The goal is not to treat AI as an oracle, but as another source of information that can be measured and validated against simpler strategies and benchmarks.
 
 ## Architecture
 
@@ -82,6 +125,7 @@ risk management and validation infrastructure are mature enough.
 ┌──────────────────────────────┐
 │       FastAPI Backend        │
 │                              │
+│ Market Data                  │
 │ Indicators                   │
 │ Backtesting                  │
 │ Risk Metrics                 │
@@ -89,22 +133,41 @@ risk management and validation infrastructure are mature enough.
                │
           ┌────┴─────┐
           ▼          ▼
-       CCXT       yfinance
+        CCXT      yfinance
           │          │
           ▼          ▼
-      Crypto     Stocks / ETFs
+       Crypto    Stocks / ETFs
 ```
+
+## Technology Stack
+
+### Desktop
+
+- Java 21+
+- JavaFX 23
+- Maven
+- Jackson
+
+### Backend
+
+- Python 3.11+
+- FastAPI
+- pandas
+- NumPy
+- CCXT
+- yfinance
 
 ## Requirements
 
 ### Backend
+
 - Python 3.11+
-- pip
+- `pip`
 
 ### Desktop
+
 - Java 21+
 - Maven
-- JavaFX
 
 ## Running the Backend
 
@@ -122,7 +185,7 @@ Health check:
 curl http://127.0.0.1:7000/health
 ```
 
-FastAPI docs:
+FastAPI interactive documentation:
 
 ```text
 http://127.0.0.1:7000/docs
@@ -135,9 +198,7 @@ cd desktop
 mvn clean javafx:run
 ```
 
-## Initial Stock Test
-
-Recommended first test:
+## Example Stock Analysis
 
 ```text
 Market: Acciones / ETF
@@ -149,61 +210,82 @@ Period: 3m
 
 ## YPF Note
 
-`YPF` currently refers to the YPF ADR traded in the United States.
+`YPF` currently represents the **YPF ADR traded in the United States**.
 
-It is not yet the local BYMA instrument in Argentine pesos.
+It does not currently represent the local BYMA instrument quoted in Argentine pesos. Support for Argentine local-market data is planned for a future stage.
 
-## Data-source Notes
+## Market Data
 
-Cryptocurrency data is obtained through public CCXT endpoints.
+Cryptocurrency data is obtained through public exchange endpoints using **CCXT**.
 
-Stock/ETF historical data is obtained through Yahoo Finance using `yfinance`.
+Stock and ETF data is obtained through **Yahoo Finance** using `yfinance`.
 
-For intraday stock analysis, AI Trader downloads the requested history in smaller
-date chunks and merges them. This avoids relying on a single large Yahoo Finance
-intraday request, which can return incomplete data.
-This is suitable for research and backtesting, but it should not be treated as
-an official execution-grade real-time feed.
+For intraday stocks, AI Trader downloads historical data in smaller date blocks and merges the results. This improves reliability when Yahoo Finance returns incomplete data for large intraday requests.
+
+The current data sources are appropriate for research and backtesting, but should not be treated as institutional or execution-grade real-time feeds.
 
 ## Documentation
 
 - [User Manual](docs/MANUAL.md)
 - [Changelog](docs/CHANGELOG.md)
 
-The manual is intentionally written for users with no previous trading experience.
+The user manual is written to be understandable even without previous trading experience.
 
 ## Roadmap
 
-- Candlestick charts
-- Multiple strategies
+### Market Experience
+
+- Universal asset search
+- Autocomplete by ticker or company name
+- Company and crypto logos
+- Recently used assets and favorites
+- More exchanges and market-data sources
+- Argentine local-market data
+
+### Strategies
+
+- Multiple strategy engine
 - Momentum
 - Mean reversion
 - Breakout
 - Strategy comparison
-- Out-of-sample validation
-- Walk-forward validation
-- Paper trading
 - Market-regime detection
-- Machine Learning
-- Gradient boosting
-- LSTM / Transformer experimentation
+
+### Validation
+
+- Out-of-sample testing
+- Walk-forward validation
+- Parameter robustness analysis
+
+### Simulation
+
+- Paper trading
+- Open/closed simulated positions
+- Portfolio tracking
+- P&L history
+
+### Artificial Intelligence
+
+- Feature engineering
+- Gradient Boosting / XGBoost experimentation
+- Machine-learning signal models
 - News analysis
 - Sentiment analysis
-- Explainable signals
-- Portfolio tracking
-- Argentine local market data
+- Explainable AI signals
+- LSTM / Transformer experimentation
 
 ## Development Principles
 
-1. Real market data before predictive AI.
-2. Risk management before automation.
+1. Use real market data before predictive AI.
+2. Risk management comes before automation.
 3. Avoid look-ahead bias.
-4. Include fees and slippage.
-5. Compare against simple benchmarks.
+4. Include commissions and slippage.
+5. Compare strategies against simple benchmarks.
 6. Prefer explainable signals.
-7. Validate out of sample.
+7. Validate results out of sample.
 8. Paper trade before considering real capital.
-9. Never present backtest performance as guaranteed future performance.
+9. Treat **NO TRADE** as a valid decision.
+10. Never present backtest performance as guaranteed future performance.
 
 ## Disclaimer
 
@@ -211,32 +293,8 @@ AI Trader is provided for educational, research and software-development purpose
 
 Nothing in this project constitutes financial, investment or trading advice.
 
-Financial markets involve risk and historical performance does not guarantee future results.
+Financial markets involve risk. Historical performance does not guarantee future results.
 
 ## License
 
 AI Trader is licensed under the **GNU General Public License v3.0 (GPL-3.0)**.
-
-
-## Yahoo intraday diagnostics
-
-During early development, stock intraday downloads log the number of rows
-returned for each Yahoo Finance date chunk and the total merged rows.
-
-This diagnostic output is temporary and helps detect incomplete intraday
-responses before relying on those results for backtesting.
-
-
-### Stock data normalization
-
-For Yahoo Finance stock data, missing intraday volume does not invalidate an
-otherwise complete OHLC candle. AI Trader keeps candles with valid timestamp,
-open, high, low and close values, and treats missing volume as zero.
-
-
-### Timestamp normalization
-
-Market timestamps are normalized explicitly to Unix milliseconds rather than
-assuming pandas uses nanosecond resolution internally. This keeps stock
-intraday candles unique across pandas/yfinance versions and prevents historical
-bars from collapsing into duplicate timestamps.
