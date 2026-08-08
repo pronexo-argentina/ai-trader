@@ -1,27 +1,39 @@
 # IntelliJ / IDE
 .idea/
 *.iml
-out/
+.vscode/
 
-# Java / Maven
+# Maven / build
 target/
+dist/
+out/
 *.class
-
-# Python
-.venv/
-venv/
-__pycache__/
-*.py[cod]
-.pytest_cache/
-
-# Environment / secrets
-.env
-.env.*
-*.key
-*.pem
 
 # macOS
 .DS_Store
+.AppleDouble
+.LSOverride
 
-# Logs
+# Logs / temp
 *.log
+*.tmp
+*.swp
+*.swo
+*.bak
+*.orig
+
+# Local configuration / secrets
+.env
+.env.*
+!.env.example
+*.properties.local
+secrets/
+credentials/
+
+# Generated packages
+*.dmg
+*.pkg
+
+# Runtime caches
+.cache/
+tmp/
